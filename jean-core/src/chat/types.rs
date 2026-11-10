@@ -116,6 +116,7 @@ pub enum Backend {
     Devin,
     Antigravity,
     Muse,
+    Qwen,
 }
 
 impl<'de> Deserialize<'de> for Backend {
@@ -140,6 +141,7 @@ impl<'de> Deserialize<'de> for Backend {
             "devin" => Backend::Devin,
             "antigravity" | "gemini" => Backend::Antigravity,
             "muse" => Backend::Muse,
+            "qwen" | "qwencode" => Backend::Qwen,
             "claude" | "" => Backend::Claude,
             other => {
                 log::warn!("Unknown chat backend '{other}', falling back to claude");

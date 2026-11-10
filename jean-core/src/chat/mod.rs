@@ -27,6 +27,7 @@ mod naming;
 mod native_history;
 pub(crate) mod opencode;
 pub(crate) mod pi;
+pub(crate) mod qwen;
 pub mod registry;
 pub mod run_log;
 pub mod search;

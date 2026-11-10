@@ -70,6 +70,7 @@ mod pi_cli;
 mod platform;
 mod prerequisites;
 mod projects;
+mod qwen_cli;
 mod qwencloud;
 mod server_update;
 mod terminal;
@@ -353,6 +354,8 @@ pub struct AppPreferences {
     pub selected_antigravity_model: String, // Default Antigravity CLI model
     #[serde(default = "default_muse_model")]
     pub selected_muse_model: String, // Default Muse Code model
+    #[serde(default = "default_qwen_model")]
+    pub selected_qwen_model: String, // Default Qwen Code model
     #[serde(default = "default_codex_reasoning_effort")]
     pub default_codex_reasoning_effort: String, // Codex reasoning effort: low, medium, high, xhigh
     #[serde(default = "default_codex_model_verbosity")]
@@ -413,6 +416,8 @@ pub struct AppPreferences {
     pub antigravity_cli_source: String, // Antigravity CLI source: "jean" (managed) or "path" (system PATH)
     #[serde(default = "default_cli_source")]
     pub muse_cli_source: String, // Muse Code CLI source: "jean" (managed) or "path" (system PATH)
+    #[serde(default = "default_cli_source")]
+    pub qwen_cli_source: String, // Qwen Code CLI source: "jean" (managed) or "path" (system PATH)
     #[serde(default = "default_cli_source")]
     pub gh_cli_source: String, // GitHub CLI source: "jean" (managed) or "path" (system PATH)
     #[serde(default = "default_cli_source")]
@@ -835,6 +840,10 @@ fn default_antigravity_model() -> String {
 
 fn default_muse_model() -> String {
     muse_cli::DEFAULT_MODEL_ID.to_string()
+}
+
+fn default_qwen_model() -> String {
+    "qwen3-coder-plus".to_string()
 }
 
 fn default_grok_cli_source() -> String {
@@ -2975,6 +2984,11 @@ pub fn is_kimi_model(model: &str) -> bool {
     model.starts_with("kimi/")
 }
 
+/// Qwen Code model IDs are the bare Qwen model names (e.g. `qwen3-coder-plus`).
+pub fn is_qwen_model(model: &str) -> bool {
+    model.to_ascii_lowercase().starts_with("qwen")
+}
+
 pub fn is_devin_model(model: &str) -> bool {
     model.starts_with("devin/")
 }
@@ -3179,6 +3193,7 @@ fn magic_prompt_model_matches_backend(model: &str, backend: &str) -> bool {
         "devin" => is_devin_model(model),
         "antigravity" => is_antigravity_model(model),
         "muse" => is_muse_model(model),
+        "qwen" => is_qwen_model(model),
         "claude" => {
             !is_codex_model(model)
                 && !is_opencode_model(model)
@@ -3189,6 +3204,7 @@ fn magic_prompt_model_matches_backend(model: &str, backend: &str) -> bool {
                 && !is_devin_model(model)
                 && !is_antigravity_model(model)
                 && !is_muse_model(model)
+                && !is_qwen_model(model)
                 && !model.starts_with("commandcode/")
         }
         _ => true,
@@ -3207,6 +3223,7 @@ fn selected_model_for_backend(preferences: &AppPreferences, backend: &str) -> St
         "devin" => preferences.selected_devin_model.clone(),
         "antigravity" => preferences.selected_antigravity_model.clone(),
         "muse" => preferences.selected_muse_model.clone(),
+        "qwen" => preferences.selected_qwen_model.clone(),
         _ => preferences.selected_model.clone(),
     }
 }
@@ -3421,6 +3438,7 @@ impl Default for AppPreferences {
             selected_devin_model: default_devin_model(),
             selected_antigravity_model: default_antigravity_model(),
             selected_muse_model: default_muse_model(),
+            selected_qwen_model: default_qwen_model(),
             default_codex_reasoning_effort: default_codex_reasoning_effort(),
             default_codex_model_verbosity: default_codex_model_verbosity(),
             default_grok_reasoning_effort: default_grok_reasoning_effort(),
@@ -3448,6 +3466,7 @@ impl Default for AppPreferences {
             opencode_cli_source: default_cli_source(),
             grok_cli_source: default_grok_cli_source(),
             kimi_cli_source: default_cli_source(),
+            qwen_cli_source: default_cli_source(),
             devin_cli_source: default_devin_cli_source(),
             antigravity_cli_source: default_cli_source(),
             muse_cli_source: default_cli_source(),
@@ -5715,6 +5734,15 @@ fn repair_managed_cli_links(context: &RuntimeContext, preferences: &AppPreferenc
             app_data
                 .join(muse_cli::CLI_DIR_NAME)
                 .join(muse_cli::MANAGED_CLI_BINARY_NAME),
+        ),
+        (
+            "qwen",
+            preferences.qwen_cli_source.as_str(),
+            app_data
+                .join("qwen-code-cli")
+                .join("node_modules")
+                .join(".bin")
+                .join(executable("qwen", "qwen.cmd")),
         ),
         (
             "cmdc",
