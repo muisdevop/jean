@@ -24,3 +24,5 @@ jobs:
 
       - name: MCP stdio tests
         run: cargo test --manifest-path jean-core/Cargo.toml jean_mcp_stdio::tests -- --nocapture
+
+# registered
